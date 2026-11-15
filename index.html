@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>紅藍陣營推塔大對決</title>
+<!-- 引入 PayPal SDK (正式上線時請將 test 換成你的 PayPal Business Client ID) -->
+<script src="https://paypal.com"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
+  body { background: #1a1a2e; color: white; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+  
+  /* 頂部戰線進度條 */
+  .header { padding: 12px; background: #16213e; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.5); z-index: 10; }
+  .title { font-size: 16px; font-weight: bold; margin-bottom: 8px; color: #ffd700; }
+  .progress-container { width: 100%; height: 24px; background: #0066ff; border-radius: 12px; overflow: hidden; display: flex; border: 2px solid #fff; position: relative; }
+  .red-bar { height: 100%; background: #ff2a55; width: 50%; transition: width 0.2s; }
+  .score-text { position: absolute; width: 100%; text-align: center; line-height: 20px; font-size: 12px; font-weight: bold; text-shadow: 1px 1px 2px #000; }
+
+  /* 中間戰場畫面 */
+  #battlefield { flex: 1; position: relative; background: linear-gradient(180deg, #2b2d42 0%, #1d1e2c 100%); overflow: hidden; }
+  .base { position: absolute; top: 50%; transform: translateY(-50%); width: 50px; height: 100px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; border-radius: 8px; z-index: 5; }
+  .base-red { left: 5px; background: #ff2a55; box-shadow: 0 0 15px #ff2a55; }
+  .base-blue { right: 5px; background: #0066ff; box-shadow: 0 0 15px #0066ff; }
+  .center-line { position: absolute; top: 0; bottom: 0; width: 2px; background: rgba(255,255,255,0.2); left: 50%; border-left: 2px dashed rgba(255,255,255,0.3); }
+
+  /* 士兵與特效 */
+  .unit { position: absolute; transform: translate(-50%, -50%); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; transition: transform 0.1s; }
+  .unit.red { background: #ff4d6d; border: 2px solid #fff; box-shadow: 0 0 8px #ff2a55; }
+  .unit.blue { background: #3a86ff; border: 2px solid #fff; box-shadow: 0 0 8px #0066ff; }
+  .unit.boss { width: 48px !important; height: 48px !important; font-size: 24px !important; z-index: 4; border: 3px solid #ffd700; }
+  .boom { position: absolute; font-size: 24px; transform: translate(-50%, -50%); animation: pop 0.4s forwards; pointer-events: none; z-index: 6; }
+  @keyframes pop { 0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(1.8); opacity: 0; } }
+
+  /* 底部控制與 PayPal 贊助區 */
+  .controls { background: #16213e; padding: 10px; display: flex; gap: 8px; border-top: 1px solid #333; z-index: 10; }
+  .team-panel { flex: 1; display: flex; flex-direction: column; gap: 6px; background: rgba(255,255,255,0.05); padding: 8px; border-radius: 8px; }
+  .team-title { text-align: center; font-size: 13px; font-weight: bold; }
+  .btn-sim { padding: 8px; border: none; border-radius: 6px; color: white; font-weight: bold; font-size: 12px; cursor: pointer; }
+  .btn-red { background: #ff2a55; }
+  .btn-blue { background: #0066ff; }
+  .paypal-box { min-height: 35px; }
+  .banner { position: absolute; top: 15%; left: 50%; transform: translateX(-50%); background: rgba(255, 215, 0, 0.9); color: #000; padding: 6px 16px; border-radius: 20px; font-weight: bold; font-size: 14px; display: none; z-index: 20; white-space: nowrap; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="title">⚔️ 紅藍陣營即時推塔對決 ⚔️</div>
+  <div class="progress-container">
+    <div class="red-bar" id="redBar"></div>
+    <div class="score-text" id="scoreText">紅隊 50% vs 50% 藍隊</div>
+  </div>
+</div>
+
+<div id="battlefield">
+  <div class="banner" id="banner">🔥 玩家贊助了超級巨人！ 🔥</div>
+  <div class="base base-red">紅方<br>主堡</div>
+  <div class="center-line" id="centerLine"></div>
+  <div class="base base-blue">藍方<br>主堡</div>
+</div>
+
+<div class="controls">
+  <!-- 紅隊支援區 -->
+  <div class="team-panel">
+    <div class="team-title" style="color:#ff4d6d;">🔴 支援紅隊</div>
+    <!-- 測試用免費按鈕（正式上線可移除） -->
+    <button class="btn-sim btn-red" onclick="spawnBoss('red')">免費測試：召喚紅方巨人</button>
+    <!-- PayPal 真實付款按鈕容器 -->
+    <div id="paypal-red" class="paypal-box"></div>
+  </div>
+
+  <!-- 藍隊支援區 -->
+  <div class="team-panel">
+    <div class="team-title" style="color:#3a86ff;">🔵 支援藍隊</div>
+    <!-- 測試用免費按鈕（正式上線可移除） -->
+    <button class="btn-sim btn-blue" onclick="spawnBoss('blue')">免費測試：召喚藍方巨人</button>
+    <!-- PayPal 真實付款按鈕容器 -->
+    <div id="paypal-blue" class="paypal-box"></div>
+  </div>
+</div>
+
+<script>
+  const battlefield = document.getElementById('battlefield');
+  const redBar = document.getElementById('redBar');
+  const scoreText = document.getElementById('scoreText');
+  const centerLine = document.getElementById('centerLine');
+  const banner = document.getElementById('banner');
+
+  let redScore = 50; // 0 ~ 100，50為平手
+  let units = [];
+
+  // 1. 無人付款時：自動持續生成基礎小兵互打
+  setInterval(() => {
+    spawnUnit('red', false);
+    spawnUnit('blue', false);
+  }, 1200);
+
+  // 生成士兵函數
+  function spawnUnit(team, isBoss) {
+    const el = document.createElement('div');
+    el.className = `unit ${team} ${isBoss ? 'boss' : ''}`;
+    el.style.width = isBoss ? '48px' : '24px';
+    el.style.height = isBoss ? '48px' : '24px';
+    el.innerText = isBoss ? '👹' : (team === 'red' ? '🗡️' : '🛡️');
+
+    const bfHeight = battlefield.clientHeight;
+    const bfWidth = battlefield.clientWidth;
+    // 隨機Y軸跑道，讓畫面看起來像大軍混戰
+    const y = (bfHeight * 0.2) + Math.random() * (bfHeight * 0.6);
+    const x = team === 'red' ? 60 : bfWidth - 60;
+
+    el.style.left = x + 'px';
+    el.style.top = y + 'px';
+    battlefield.appendChild(el);
+
+    units.push({
+      el, team, isBoss, x, y,
+      hp: isBoss ? 150 : 20,
+      atk: isBoss ? 40 : 10,
+      speed: isBoss ? 1.2 : (1.5 + Math.random() * 0.8)
+    });
+  }
+
+  // 付費或測試觸發：召喚超級巨人並全場公告
+  function spawnBoss(team) {
+    for(let i=0; i<3; i++) {
+      setTimeout(() => spawnUnit(team, true), i * 200);
+    }
+    banner.innerText = team === 'red' ? '🔥 紅隊獲得 PayPal 增援！巨人軍團出擊！' : '⚡ 藍隊獲得 PayPal 增援！巨人軍團出擊！';
+    banner.style.display = 'block';
+    setTimeout(() => { banner.style.display = 'none'; }, 3000);
+  }
+
+  // 爆炸特效
+  function createBoom(x, y) {
+    const boom = document.createElement('div');
+    boom.className = 'boom';
+    boom.innerText = '💥';
+    boom.style.left = x + 'px';
+    boom.style.top = y + 'px';
+    battlefield.appendChild(boom);
+    setTimeout(() => boom.remove(), 400);
+  }
+
+  // 2. 遊戲主迴圈（移動、碰撞交戰、推塔計分）
+  function gameLoop() {
+    const bfWidth = battlefield.clientWidth;
+
+    for (let i = units.length - 1; i >= 0; i--) {
+      let u = units[i];
+      u.x += (u.team === 'red' ? u.speed : -u.speed);
+      u.el.style.left = u.x + 'px';
+
+      // 檢查是否撞到敵方士兵
+      let hitEnemy = false;
+      for (let j = units.length - 1; j >= 0; j--) {
+        let enemy = units[j];
+        if (u.team !== enemy.team && Math.abs(u.x - enemy.x) < 25 && Math.abs(u.y - enemy.y) < 35) {
+          hitEnemy = true;
+          enemy.hp -= u.atk;
+          u.hp -= enemy.atk;
+          createBoom((u.x + enemy.x)/2, (u.y + enemy.y)/2);
+          break;
+        }
+      }
+
+      // 檢查是否攻破對方主堡
+      if (u.team === 'red' && u.x >= bfWidth - 60) {
+        redScore = Math.min(100, redScore + (u.isBoss ? 8 : 1.5));
+        u.hp = 0;
+        createBoom(bfWidth - 60, u.y);
+      } else if (u.team === 'blue' && u.x <= 60) {
+        redScore = Math.max(0, redScore - (u.isBoss ? 8 : 1.5));
+        u.hp = 0;
+        createBoom(60, u.y);
+      }
+
+      // 移除陣亡單位
+      if (u.hp <= 0) {
+        u.el.remove();
+        units.splice(i, 1);
+      }
+    }
+
+    // 更新進度條與勝負重置
+    let displayRed = Math.round(redScore);
+    redBar.style.width = displayRed + '%';
+    centerLine.style.left = displayRed + '%';
+    scoreText.innerText = `紅隊 ${displayRed}% vs ${100 - displayRed}% 藍隊`;
+
+    if (redScore >= 100 || redScore <= 0) {
+      alert(redScore >= 100 ? '🎉 紅隊攻破藍方主堡獲勝！開始下一局！' : '🎉 藍隊攻破紅方主堡獲勝！開始下一局！');
+      redScore = 50;
+      units.forEach(u => u.el.remove());
+      units = [];
+    }
+
+    requestAnimationFrame(gameLoop);
+  }
+  gameLoop();
+
+  // 3. 綁定 PayPal 真實收款按鈕（付款成功才出兵）
+  function renderPayPalBtn(containerId, team) {
+    if (typeof paypal !== 'undefined') {
+      paypal.Buttons({
+        style: { layout: 'horizontal', height: 35, tagline: false },
+        createOrder: function(data, actions) {
+          return actions.order.create({
+            purchase_units: [{ amount: { value: '1.00' }, description: `支援${team === 'red' ? '紅隊' : '藍隊'}巨人軍團` }]
+          });
+        },
+        onApprove: function(data, actions) {
+          return actions.order.capture().then(function(details) {
+            // 確認付款完成後，觸發遊戲內增援！
+            spawnBoss(team);
+          });
+        }
+      }).render(containerId);
+    }
+  }
+
+  renderPayPalBtn('#paypal-red', 'red');
+  renderPayPalBtn('#paypal-blue', 'blue');
+</script>
+</body>
+</html>
