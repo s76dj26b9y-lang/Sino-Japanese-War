@@ -167,11 +167,11 @@
 
       // 檢查是否攻破對方主堡
       if (u.team === 'red' && u.x >= bfWidth - 60) {
-        redScore = Math.min(100, redScore + (u.isBoss ? 8 : 1.5));
+        redScore = Math.min(100, redScore + (u.isBoss ? 0.08 : 0.005));
         u.hp = 0;
         createBoom(bfWidth - 60, u.y);
       } else if (u.team === 'blue' && u.x <= 60) {
-        redScore = Math.max(0, redScore - (u.isBoss ? 8 : 1.5));
+        redScore = Math.max(0, redScore - (u.isBoss ? 0.08 : 0.005));
         u.hp = 0;
         createBoom(60, u.y);
       }
