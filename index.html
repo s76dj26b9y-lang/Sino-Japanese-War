@@ -4,12 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>中國vs日本線上大對決</title>
-<script src="https://paypal.com"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
   body { background: #1a1a2e; color: white; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
   
-  /* 螢幕震動特效 */
   @keyframes screenShake {
     0%, 100% { transform: translate(0, 0); }
     15% { transform: translate(-8px, 6px); }
@@ -20,22 +18,19 @@
   }
   .shake { animation: screenShake 0.45s ease-in-out; }
 
-  /* 頂部戰線進度條 */
   .header { padding: 12px; background: #16213e; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.5); z-index: 10; }
   .title { font-size: 16px; font-weight: bold; margin-bottom: 8px; color: #ffd700; }
   .progress-container { width: 100%; height: 26px; background: #0066ff; border-radius: 13px; overflow: hidden; display: flex; border: 2px solid #fff; position: relative; }
   .red-bar { height: 100%; background: #ff2a55; width: 50%; transition: width 0.2s; }
-  .score-text { position: absolute; width: 100%; text-align: center; line-height: 22px; font-size: 12px; font-weight: 900; text-shadow: 1px 1px 3px #000; letter-spacing: 0.5px; }
+  .score-text { position: absolute; width: 100%; text-align: center; line-height: 22px; font-size: 12px; font-weight: 900; text-shadow: 1px 1px 3px #000; }
 
-  /* 中間戰場畫面 */
   #battlefield { flex: 1; position: relative; background: radial-gradient(circle at center, #2b2d42 0%, #141522 100%); overflow: hidden; }
   .flash-overlay { position: absolute; inset: 0; pointer-events: none; opacity: 0; z-index: 15; transition: opacity 0.4s; }
-  .base { position: absolute; top: 50%; transform: translateY(-50%); width: 64px; height: 110px; border-radius: 10px; z-index: 5; object-fit: cover; background: #222; transition: transform 0.1s; }
+  .base { position: absolute; top: 50%; transform: translateY(-50%); width: 64px; height: 110px; border-radius: 10px; z-index: 5; object-fit: cover; background: #222; }
   .base-red { left: 5px; border: 2px solid #ff2a55; box-shadow: 0 0 15px #ff2a55; }
   .base-blue { right: 5px; border: 2px solid #0066ff; box-shadow: 0 0 15px #0066ff; }
   .center-line { position: absolute; top: 0; bottom: 0; width: 2px; background: rgba(255,255,255,0.2); left: 50%; border-left: 2px dashed rgba(255,255,255,0.3); }
 
-  /* 士兵與 Boss 華麗樣式 */
   .unit { position: absolute; transform: translate(-50%, -50%); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; overflow: hidden; }
   .unit.red { background: #ff4d6d; border: 2px solid #fff; box-shadow: 0 0 8px #ff2a55; }
   .unit.blue { background: #3a86ff; border: 2px solid #fff; box-shadow: 0 0 8px #0066ff; }
@@ -47,7 +42,6 @@
   }
   .unit.boss { width: 62px !important; height: 62px !important; z-index: 6; border: 3px solid #ffd700; animation: bossAura 0.8s infinite; }
 
-  /* 打擊特效與傷害跳字 */
   .boom { position: absolute; font-size: 24px; transform: translate(-50%, -50%); animation: pop 0.4s forwards; pointer-events: none; z-index: 7; }
   @keyframes pop { 0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(1.8); opacity: 0; } }
 
@@ -57,21 +51,17 @@
   .shockwave { position: absolute; width: 20px; height: 20px; border-radius: 50%; border: 4px solid #ffd700; transform: translate(-50%, -50%); animation: waveExpand 0.5s ease-out forwards; pointer-events: none; z-index: 8; }
   @keyframes waveExpand { 0% { width: 20px; height: 20px; opacity: 1; } 100% { width: 150px; height: 150px; opacity: 0; border-width: 1px; } }
 
-  /* Boss 暴擊傷害字體 (-99999) */
   .dmg-text { position: absolute; color: #ffeb3b; font-weight: 900; font-size: 20px; text-shadow: 0 0 8px #ff0000, 1px 1px 2px #000; transform: translate(-50%, -50%); animation: floatUp 0.65s ease-out forwards; pointer-events: none; z-index: 10; white-space: nowrap; }
-  /* 小兵普通傷害字體 (-10000) */
   .dmg-minion { position: absolute; color: #ffffff; font-weight: 800; font-size: 14px; text-shadow: 0 0 5px #ff2a55, 1px 1px 2px #000; transform: translate(-50%, -50%); animation: floatUp 0.5s ease-out forwards; pointer-events: none; z-index: 9; white-space: nowrap; }
-
   @keyframes floatUp { 0% { transform: translate(-50%, -50%) scale(0.8); opacity: 1; } 100% { transform: translate(-50%, -140%) scale(1.25); opacity: 0; } }
 
   .trail { position: absolute; width: 18px; height: 18px; border-radius: 50%; pointer-events: none; z-index: 3; animation: fadeTrail 0.4s forwards; }
   @keyframes fadeTrail { 0% { transform: translate(-50%, -50%) scale(1); opacity: 0.7; } 100% { transform: translate(-50%, -50%) scale(0.1); opacity: 0; } }
 
-  /* 底部控制與 PayPal 贊助區 */
   .controls { background: #16213e; padding: 10px; display: flex; gap: 8px; border-top: 1px solid #333; z-index: 10; }
   .team-panel { flex: 1; display: flex; flex-direction: column; gap: 6px; background: rgba(255,255,255,0.05); padding: 8px; border-radius: 8px; }
   .team-title { text-align: center; font-size: 13px; font-weight: bold; }
-  .btn-sim { padding: 8px; border: none; border-radius: 6px; color: white; font-weight: bold; font-size: 12px; cursor: pointer; }
+  .btn-sim { padding: 10px; border: none; border-radius: 6px; color: white; font-weight: bold; font-size: 13px; cursor: pointer; }
   .btn-red { background: linear-gradient(45deg, #ff2a55, #ff6b35); box-shadow: 0 2px 8px rgba(255,42,85,0.5); }
   .btn-blue { background: linear-gradient(45deg, #0066ff, #00c6ff); box-shadow: 0 2px 8px rgba(0,102,255,0.5); }
   .paypal-box { min-height: 35px; }
@@ -99,13 +89,13 @@
 <div class="controls">
   <div class="team-panel">
     <div class="team-title" style="color:#ff4d6d;">🔴 支援中國</div>
-    <button class="btn-sim btn-red" onclick="spawnBoss('red')">免費測試：召喚中國 Boss</button>
+    <button class="btn-sim btn-red" id="btnRedBoss">免費測試：召喚中國 Boss</button>
     <div id="paypal-red" class="paypal-box"></div>
   </div>
 
   <div class="team-panel">
     <div class="team-title" style="color:#3a86ff;">🔵 支援日本</div>
-    <button class="btn-sim btn-blue" onclick="spawnBoss('blue')">免費測試：召喚日本 Boss</button>
+    <button class="btn-sim btn-blue" id="btnBlueBoss">免費測試：召喚日本 Boss</button>
     <div id="paypal-blue" class="paypal-box"></div>
   </div>
 </div>
@@ -118,10 +108,9 @@
   const banner = document.getElementById('banner');
   const flashOverlay = document.getElementById('flashOverlay');
 
-  // === 主堡與傷害設定區 ===
-  const MAX_HP = 100000000;  // 主堡總血量：1億
-  const MINION_DMG = 10000;  // 小兵傷害：10000
-  const BOSS_DMG = 99999;    // Boss 傷害：99999
+  const MAX_HP = 100000000;
+  const MINION_DMG = 10000;
+  const BOSS_DMG = 99999;
 
   let redHp = MAX_HP;
   let blueHp = MAX_HP;
@@ -140,13 +129,6 @@
     }
   }
 
-  // 1. 無人付款時：自動生成基礎小兵
-  setInterval(() => {
-    spawnUnit('red', false);
-    spawnUnit('blue', false);
-  }, 1800);
-
-  // 生成士兵與 Boss
   function spawnUnit(team, isBoss) {
     const el = document.createElement('div');
     el.className = `unit ${team} ${isBoss ? 'boss' : ''}`;
@@ -160,8 +142,8 @@
       el.innerText = team === 'red' ? '🗡️' : '🛡️';
     }
 
-    const bfHeight = battlefield.clientHeight;
-    const bfWidth = battlefield.clientWidth;
+    const bfHeight = battlefield.clientHeight || 400;
+    const bfWidth = battlefield.clientWidth || 350;
     const y = (bfHeight * 0.25) + Math.random() * (bfHeight * 0.5);
     const x = team === 'red' ? 75 : bfWidth - 75;
 
@@ -183,4 +165,15 @@
 
   function spawnBoss(team) {
     triggerScreenEffect(team, true);
-    for(let i=0; i<3; i++) {
+    for(let i = 0; i < 3; i++) {
+      setTimeout(() => spawnUnit(team, true), i * 250);
+    }
+    banner.innerText = team === 'red' ? '🔥 中國大招降臨！超級 Boss 橫掃戰場！' : '⚡ 日本大招降臨！超級 Boss 橫掃戰場！';
+    banner.style.display = 'block';
+    setTimeout(() => { banner.style.display = 'none'; }, 3000);
+  }
+
+  document.getElementById('btnRedBoss').addEventListener('click', () => spawnBoss('red'));
+  document.getElementById('btnBlueBoss').addEventListener('click', () => spawnBoss('blue'));
+
+  function createMinionHitEffect(x, y, showDmg = false) {
