@@ -7,7 +7,6 @@
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
   body { background: #1a1a2e; color: white; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-  
   @keyframes screenShake {
     0%, 100% { transform: translate(0, 0); }
     15% { transform: translate(-8px, 6px); }
@@ -17,47 +16,37 @@
     75% { transform: translate(-4px, 3px); }
   }
   .shake { animation: screenShake 0.45s ease-in-out; }
-
   .header { padding: 12px; background: #16213e; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.5); z-index: 10; }
   .title { font-size: 16px; font-weight: bold; margin-bottom: 8px; color: #ffd700; }
   .progress-container { width: 100%; height: 26px; background: #0066ff; border-radius: 13px; overflow: hidden; display: flex; border: 2px solid #fff; position: relative; }
   .red-bar { height: 100%; background: #ff2a55; width: 50%; transition: width 0.2s; }
   .score-text { position: absolute; width: 100%; text-align: center; line-height: 22px; font-size: 12px; font-weight: 900; text-shadow: 1px 1px 3px #000; }
-
   #battlefield { flex: 1; position: relative; background: radial-gradient(circle at center, #2b2d42 0%, #141522 100%); overflow: hidden; }
   .flash-overlay { position: absolute; inset: 0; pointer-events: none; opacity: 0; z-index: 15; transition: opacity 0.4s; }
   .base { position: absolute; top: 50%; transform: translateY(-50%); width: 64px; height: 110px; border-radius: 10px; z-index: 5; object-fit: cover; background: #222; }
   .base-red { left: 5px; border: 2px solid #ff2a55; box-shadow: 0 0 15px #ff2a55; }
   .base-blue { right: 5px; border: 2px solid #0066ff; box-shadow: 0 0 15px #0066ff; }
   .center-line { position: absolute; top: 0; bottom: 0; width: 2px; background: rgba(255,255,255,0.2); left: 50%; border-left: 2px dashed rgba(255,255,255,0.3); }
-
   .unit { position: absolute; transform: translate(-50%, -50%); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; overflow: hidden; }
   .unit.red { background: #ff4d6d; border: 2px solid #fff; box-shadow: 0 0 8px #ff2a55; }
   .unit.blue { background: #3a86ff; border: 2px solid #fff; box-shadow: 0 0 8px #0066ff; }
-  
   @keyframes bossAura {
     0% { box-shadow: 0 0 12px #ffd700, 0 0 25px #ff4500; transform: translate(-50%, -50%) scale(1); }
     50% { box-shadow: 0 0 25px #ffd700, 0 0 45px #ff0055; transform: translate(-50%, -50%) scale(1.08); }
     100% { box-shadow: 0 0 12px #ffd700, 0 0 25px #ff4500; transform: translate(-50%, -50%) scale(1); }
   }
   .unit.boss { width: 62px !important; height: 62px !important; z-index: 6; border: 3px solid #ffd700; animation: bossAura 0.8s infinite; }
-
   .boom { position: absolute; font-size: 24px; transform: translate(-50%, -50%); animation: pop 0.4s forwards; pointer-events: none; z-index: 7; }
   @keyframes pop { 0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(1.8); opacity: 0; } }
-
   .mega-boom { position: absolute; font-size: 56px; transform: translate(-50%, -50%); animation: megaPop 0.7s forwards; pointer-events: none; z-index: 9; filter: drop-shadow(0 0 15px #ffae00); }
   @keyframes megaPop { 0% { transform: translate(-50%, -50%) scale(0.3) rotate(0deg); opacity: 1; } 50% { transform: translate(-50%, -50%) scale(1.5) rotate(20deg); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(2.2) rotate(-15deg); opacity: 0; } }
-
   .shockwave { position: absolute; width: 20px; height: 20px; border-radius: 50%; border: 4px solid #ffd700; transform: translate(-50%, -50%); animation: waveExpand 0.5s ease-out forwards; pointer-events: none; z-index: 8; }
   @keyframes waveExpand { 0% { width: 20px; height: 20px; opacity: 1; } 100% { width: 150px; height: 150px; opacity: 0; border-width: 1px; } }
-
   .dmg-text { position: absolute; color: #ffeb3b; font-weight: 900; font-size: 20px; text-shadow: 0 0 8px #ff0000, 1px 1px 2px #000; transform: translate(-50%, -50%); animation: floatUp 0.65s ease-out forwards; pointer-events: none; z-index: 10; white-space: nowrap; }
   .dmg-minion { position: absolute; color: #ffffff; font-weight: 800; font-size: 14px; text-shadow: 0 0 5px #ff2a55, 1px 1px 2px #000; transform: translate(-50%, -50%); animation: floatUp 0.5s ease-out forwards; pointer-events: none; z-index: 9; white-space: nowrap; }
   @keyframes floatUp { 0% { transform: translate(-50%, -50%) scale(0.8); opacity: 1; } 100% { transform: translate(-50%, -140%) scale(1.25); opacity: 0; } }
-
   .trail { position: absolute; width: 18px; height: 18px; border-radius: 50%; pointer-events: none; z-index: 3; animation: fadeTrail 0.4s forwards; }
   @keyframes fadeTrail { 0% { transform: translate(-50%, -50%) scale(1); opacity: 0.7; } 100% { transform: translate(-50%, -50%) scale(0.1); opacity: 0; } }
-
   .controls { background: #16213e; padding: 10px; display: flex; gap: 8px; border-top: 1px solid #333; z-index: 10; }
   .team-panel { flex: 1; display: flex; flex-direction: column; gap: 6px; background: rgba(255,255,255,0.05); padding: 8px; border-radius: 8px; }
   .team-title { text-align: center; font-size: 13px; font-weight: bold; }
@@ -99,7 +88,6 @@
     <div id="paypal-blue" class="paypal-box"></div>
   </div>
 </div>
-
 <script>
   const battlefield = document.getElementById('battlefield');
   const redBar = document.getElementById('redBar');
@@ -177,129 +165,153 @@
   document.getElementById('btnBlueBoss').addEventListener('click', () => spawnBoss('blue'));
 
   function createMinionHitEffect(x, y, showDmg = false) {
-const boom = document.createElement('div');
-boom.className = 'boom';
-boom.innerText = '💥';
-boom.style.left = x + 'px';
-boom.style.top = y + 'px';
-battlefield.appendChild(boom);
-setTimeout(() => boom.remove(), 400);
-if (showDmg) {
-const dmg = document.createElement('div');
-dmg.className = 'dmg-minion';
-dmg.innerText = -${MINION_DMG};
-dmg.style.left = x + 'px';
-dmg.style.top = (y - 15) + 'px';
-battlefield.appendChild(dmg);
-setTimeout(() => dmg.remove(), 500);
-}
-}
-function createBossHitEffect(x, y, team, isBaseHit = false) {
-createShockwave(x, y, team);
-const mega = document.createElement('div');
-mega.className = 'mega-boom';
-mega.innerText = isBaseHit ? '🌋' : '💥';
-mega.style.left = x + 'px';
-mega.style.top = y + 'px';
-battlefield.appendChild(mega);
-setTimeout(() => mega.remove(), 700);
-const dmg = document.createElement('div');
-dmg.className = 'dmg-text';
-dmg.innerText = -${BOSS_DMG};
-dmg.style.left = x + 'px';
-dmg.style.top = (y - 20) + 'px';
-battlefield.appendChild(dmg);
-setTimeout(() => dmg.remove(), 650);
-if (isBaseHit) triggerScreenEffect(team, false);
-}
-function createShockwave(x, y, team) {
-const wave = document.createElement('div');
-wave.className = 'shockwave';
-wave.style.borderColor = team === 'red' ? '#ffeb3b' : '#00e5ff';
-wave.style.left = x + 'px';
-wave.style.top = y + 'px';
-battlefield.appendChild(wave);
-setTimeout(() => wave.remove(), 500);
-}
-function createTrail(x, y, team) {
-const trail = document.createElement('div');
-trail.className = 'trail';
-trail.style.background = team === 'red' ? 'radial-gradient(circle, #ffd700, #ff2a55)' : 'radial-gradient(circle, #ffffff, #00e5ff)';
-trail.style.left = x + 'px';
-trail.style.top = y + 'px';
-battlefield.appendChild(trail);
-setTimeout(() => trail.remove(), 400);
-}
-// 立即生成第一批小兵，並設定每 1.8 秒持續出兵
-spawnUnit('red', false);
-spawnUnit('blue', false);
-setInterval(() => {
-spawnUnit('red', false);
-spawnUnit('blue', false);
-}, 1800);
-function gameLoop() {
-frameCount++;
-const bfWidth = battlefield.clientWidth || 350;
-for (let i = units.length - 1; i >= 0; i--) {
-let u = units[i];
-u.x += (u.team === 'red' ? u.speed : -u.speed);
-u.el.style.left = u.x + 'px';
-if (u.isBoss && frameCount % 4 === 0) {
-createTrail(u.x, u.y, u.team);
-}
-for (let j = units.length - 1; j >= 0; j--) {
-let enemy = units[j];
-if (u.team !== enemy.team && Math.abs(u.x - enemy.x) < 30 && Math.abs(u.y - enemy.y) < 120) {
-enemy.hp -= u.atk;
-u.hp -= enemy.atk;
-const hitX = (u.x + enemy.x) / 2;
-const hitY = (u.y + enemy.y) / 2;
-if (u.isBoss || enemy.isBoss) {
-createBossHitEffect(hitX, hitY, u.isBoss ? u.team : enemy.team, false);
-} else {
-createMinionHitEffect(hitX, hitY, false);
-}
-break;
-}
-}
-if (u.team === 'red' && u.x >= bfWidth - 75) {
-blueHp = Math.max(0, blueHp - (u.isBoss ? BOSS_DMG : MINION_DMG));
-u.hp = 0;
-u.isBoss ? createBossHitEffect(bfWidth - 75, u.y, 'red', true) : createMinionHitEffect(bfWidth - 75, u.y, true);
-} else if (u.team === 'blue' && u.x <= 75) {
-redHp = Math.max(0, redHp - (u.isBoss ? BOSS_DMG : MINION_DMG));
-u.hp = 0;
-u.isBoss ? createBossHitEffect(75, u.y, 'blue', true) : createMinionHitEffect(75, u.y, true);
-}
-if (u.hp <= 0) {
-u.el.remove();
-units.splice(i, 1);
-}
-}
-const totalRemaining = redHp + blueHp;
-const redRatio = totalRemaining > 0 ? (redHp / totalRemaining) * 100 : 50;
-redBar.style.width = redRatio + '%';
-centerLine.style.left = redRatio + '%';
-scoreText.innerText = 中國 ${redHp.toLocaleString()} vs ${blueHp.toLocaleString()} 日本;
-if (blueHp <= 0 || redHp <= 0) {
-alert(blueHp <= 0 ? '🎉 中國攻破日本主堡獲勝！開始下一局！' : '🎉 日本攻破中國主堡獲勝！開始下一局！');
-redHp = MAX_HP;
-blueHp = MAX_HP;
-units.forEach(u => u.el.remove());
-units = [];
-}
-requestAnimationFrame(gameLoop);
-}
-gameLoop();
-function initPayPal() {
-if (typeof paypal === 'undefined') return;
-['red', 'blue'].forEach(team => {
-paypal.Buttons({
-style: { layout: 'horizontal', height: 35, tagline: false },
-createOrder: (data, actions) => actions.order.create({
-purchase_units: [{ amount: { value: '1.00' }, description: 支援${team === 'red' ? '中國' : '日本'} Boss 軍團 }]
-}),
-onApprove: (data, actions) => actions.order.capture().then(() => spawnBoss(team))
-}).render(#paypal-${team});
-});
-}
+    const boom = document.createElement('div');
+    boom.className = 'boom';
+    boom.innerText = '💥';
+    boom.style.left = x + 'px';
+    boom.style.top = y + 'px';
+    battlefield.appendChild(boom);
+    setTimeout(() => boom.remove(), 400);
+
+    if (showDmg) {
+      const dmg = document.createElement('div');
+      dmg.className = 'dmg-minion';
+      dmg.innerText = `-${MINION_DMG}`;
+      dmg.style.left = x + 'px';
+      dmg.style.top = (y - 15) + 'px';
+      battlefield.appendChild(dmg);
+      setTimeout(() => dmg.remove(), 500);
+    }
+  }
+
+  function createBossHitEffect(x, y, team, isBaseHit = false) {
+    createShockwave(x, y, team);
+
+    const mega = document.createElement('div');
+    mega.className = 'mega-boom';
+    mega.innerText = isBaseHit ? '🌋' : '💥';
+    mega.style.left = x + 'px';
+    mega.style.top = y + 'px';
+    battlefield.appendChild(mega);
+    setTimeout(() => mega.remove(), 700);
+
+    const dmg = document.createElement('div');
+    dmg.className = 'dmg-text';
+    dmg.innerText = `-${BOSS_DMG}`;
+    dmg.style.left = x + 'px';
+    dmg.style.top = (y - 20) + 'px';
+    battlefield.appendChild(dmg);
+    setTimeout(() => dmg.remove(), 650);
+
+    if (isBaseHit) triggerScreenEffect(team, false);
+  }
+
+  function createShockwave(x, y, team) {
+    const wave = document.createElement('div');
+    wave.className = 'shockwave';
+    wave.style.borderColor = team === 'red' ? '#ffeb3b' : '#00e5ff';
+    wave.style.left = x + 'px';
+    wave.style.top = y + 'px';
+    battlefield.appendChild(wave);
+    setTimeout(() => wave.remove(), 500);
+  }
+
+  function createTrail(x, y, team) {
+    const trail = document.createElement('div');
+    trail.className = 'trail';
+    trail.style.background = team === 'red' ? 'radial-gradient(circle, #ffd700, #ff2a55)' : 'radial-gradient(circle, #ffffff, #00e5ff)';
+    trail.style.left = x + 'px';
+    trail.style.top = y + 'px';
+    battlefield.appendChild(trail);
+    setTimeout(() => trail.remove(), 400);
+  }
+
+  spawnUnit('red', false);
+  spawnUnit('blue', false);
+  setInterval(() => {
+    spawnUnit('red', false);
+    spawnUnit('blue', false);
+  }, 1800);
+
+  function gameLoop() {
+    frameCount++;
+    const bfWidth = battlefield.clientWidth || 350;
+
+    for (let i = units.length - 1; i >= 0; i--) {
+      let u = units[i];
+      u.x += (u.team === 'red' ? u.speed : -u.speed);
+      u.el.style.left = u.x + 'px';
+
+      if (u.isBoss && frameCount % 4 === 0) {
+        createTrail(u.x, u.y, u.team);
+      }
+
+      for (let j = units.length - 1; j >= 0; j--) {
+        let enemy = units[j];
+        if (u.team !== enemy.team && Math.abs(u.x - enemy.x) < 30 && Math.abs(u.y - enemy.y) < 120) {
+          enemy.hp -= u.atk;
+          u.hp -= enemy.atk;
+          const hitX = (u.x + enemy.x) / 2;
+          const hitY = (u.y + enemy.y) / 2;
+
+          if (u.isBoss || enemy.isBoss) {
+            createBossHitEffect(hitX, hitY, u.isBoss ? u.team : enemy.team, false);
+          } else {
+            createMinionHitEffect(hitX, hitY, false);
+          }
+          break;
+        }
+      }
+
+      if (u.team === 'red' && u.x >= bfWidth - 75) {
+        blueHp = Math.max(0, blueHp - (u.isBoss ? BOSS_DMG : MINION_DMG));
+        u.hp = 0;
+        u.isBoss ? createBossHitEffect(bfWidth - 75, u.y, 'red', true) : createMinionHitEffect(bfWidth - 75, u.y, true);
+      } else if (u.team === 'blue' && u.x <= 75) {
+        redHp = Math.max(0, redHp - (u.isBoss ? BOSS_DMG : MINION_DMG));
+        u.hp = 0;
+        u.isBoss ? createBossHitEffect(75, u.y, 'blue', true) : createMinionHitEffect(75, u.y, true);
+      }
+
+      if (u.hp <= 0) {
+        u.el.remove();
+        units.splice(i, 1);
+      }
+    }
+
+    const totalRemaining = redHp + blueHp;
+    const redRatio = totalRemaining > 0 ? (redHp / totalRemaining) * 100 : 50;
+    redBar.style.width = redRatio + '%';
+    centerLine.style.left = redRatio + '%';
+    scoreText.innerText = `中國 ${redHp.toLocaleString()} vs ${blueHp.toLocaleString()} 日本`;
+
+    if (blueHp <= 0 || redHp <= 0) {
+      alert(blueHp <= 0 ? '🎉 中國攻破日本主堡獲勝！開始下一局！' : '🎉 日本攻破中國主堡獲勝！開始下一局！');
+      redHp = MAX_HP;
+      blueHp = MAX_HP;
+      units.forEach(u => u.el.remove());
+      units = [];
+    }
+
+    requestAnimationFrame(gameLoop);
+  }
+  gameLoop();
+</script>
+
+<script src="https://paypal.com" onload="initPayPal()"></script>
+<script>
+  function initPayPal() {
+    if (typeof paypal === 'undefined') return;
+    ['red', 'blue'].forEach(team => {
+      paypal.Buttons({
+        style: { layout: 'horizontal', height: 35, tagline: false },
+        createOrder: (data, actions) => actions.order.create({
+          purchase_units: [{ amount: { value: '1.00' }, description: `支援${team === 'red' ? '中國' : '日本'} Boss 軍團` }]
+        }),
+        onApprove: (data, actions) => actions.order.capture().then(() => spawnBoss(team))
+      }).render(`#paypal-${team}`);
+    });
+  }
+</script>
+</body>
+</html>
