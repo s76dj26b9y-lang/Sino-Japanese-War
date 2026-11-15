@@ -177,3 +177,129 @@
   document.getElementById('btnBlueBoss').addEventListener('click', () => spawnBoss('blue'));
 
   function createMinionHitEffect(x, y, showDmg = false) {
+const boom = document.createElement('div');
+boom.className = 'boom';
+boom.innerText = '💥';
+boom.style.left = x + 'px';
+boom.style.top = y + 'px';
+battlefield.appendChild(boom);
+setTimeout(() => boom.remove(), 400);
+if (showDmg) {
+const dmg = document.createElement('div');
+dmg.className = 'dmg-minion';
+dmg.innerText = -${MINION_DMG};
+dmg.style.left = x + 'px';
+dmg.style.top = (y - 15) + 'px';
+battlefield.appendChild(dmg);
+setTimeout(() => dmg.remove(), 500);
+}
+}
+function createBossHitEffect(x, y, team, isBaseHit = false) {
+createShockwave(x, y, team);
+const mega = document.createElement('div');
+mega.className = 'mega-boom';
+mega.innerText = isBaseHit ? '🌋' : '💥';
+mega.style.left = x + 'px';
+mega.style.top = y + 'px';
+battlefield.appendChild(mega);
+setTimeout(() => mega.remove(), 700);
+const dmg = document.createElement('div');
+dmg.className = 'dmg-text';
+dmg.innerText = -${BOSS_DMG};
+dmg.style.left = x + 'px';
+dmg.style.top = (y - 20) + 'px';
+battlefield.appendChild(dmg);
+setTimeout(() => dmg.remove(), 650);
+if (isBaseHit) triggerScreenEffect(team, false);
+}
+function createShockwave(x, y, team) {
+const wave = document.createElement('div');
+wave.className = 'shockwave';
+wave.style.borderColor = team === 'red' ? '#ffeb3b' : '#00e5ff';
+wave.style.left = x + 'px';
+wave.style.top = y + 'px';
+battlefield.appendChild(wave);
+setTimeout(() => wave.remove(), 500);
+}
+function createTrail(x, y, team) {
+const trail = document.createElement('div');
+trail.className = 'trail';
+trail.style.background = team === 'red' ? 'radial-gradient(circle, #ffd700, #ff2a55)' : 'radial-gradient(circle, #ffffff, #00e5ff)';
+trail.style.left = x + 'px';
+trail.style.top = y + 'px';
+battlefield.appendChild(trail);
+setTimeout(() => trail.remove(), 400);
+}
+// 立即生成第一批小兵，並設定每 1.8 秒持續出兵
+spawnUnit('red', false);
+spawnUnit('blue', false);
+setInterval(() => {
+spawnUnit('red', false);
+spawnUnit('blue', false);
+}, 1800);
+function gameLoop() {
+frameCount++;
+const bfWidth = battlefield.clientWidth || 350;
+for (let i = units.length - 1; i >= 0; i--) {
+let u = units[i];
+u.x += (u.team === 'red' ? u.speed : -u.speed);
+u.el.style.left = u.x + 'px';
+if (u.isBoss && frameCount % 4 === 0) {
+createTrail(u.x, u.y, u.team);
+}
+for (let j = units.length - 1; j >= 0; j--) {
+let enemy = units[j];
+if (u.team !== enemy.team && Math.abs(u.x - enemy.x) < 30 && Math.abs(u.y - enemy.y) < 120) {
+enemy.hp -= u.atk;
+u.hp -= enemy.atk;
+const hitX = (u.x + enemy.x) / 2;
+const hitY = (u.y + enemy.y) / 2;
+if (u.isBoss || enemy.isBoss) {
+createBossHitEffect(hitX, hitY, u.isBoss ? u.team : enemy.team, false);
+} else {
+createMinionHitEffect(hitX, hitY, false);
+}
+break;
+}
+}
+if (u.team === 'red' && u.x >= bfWidth - 75) {
+blueHp = Math.max(0, blueHp - (u.isBoss ? BOSS_DMG : MINION_DMG));
+u.hp = 0;
+u.isBoss ? createBossHitEffect(bfWidth - 75, u.y, 'red', true) : createMinionHitEffect(bfWidth - 75, u.y, true);
+} else if (u.team === 'blue' && u.x <= 75) {
+redHp = Math.max(0, redHp - (u.isBoss ? BOSS_DMG : MINION_DMG));
+u.hp = 0;
+u.isBoss ? createBossHitEffect(75, u.y, 'blue', true) : createMinionHitEffect(75, u.y, true);
+}
+if (u.hp <= 0) {
+u.el.remove();
+units.splice(i, 1);
+}
+}
+const totalRemaining = redHp + blueHp;
+const redRatio = totalRemaining > 0 ? (redHp / totalRemaining) * 100 : 50;
+redBar.style.width = redRatio + '%';
+centerLine.style.left = redRatio + '%';
+scoreText.innerText = 中國 ${redHp.toLocaleString()} vs ${blueHp.toLocaleString()} 日本;
+if (blueHp <= 0 || redHp <= 0) {
+alert(blueHp <= 0 ? '🎉 中國攻破日本主堡獲勝！開始下一局！' : '🎉 日本攻破中國主堡獲勝！開始下一局！');
+redHp = MAX_HP;
+blueHp = MAX_HP;
+units.forEach(u => u.el.remove());
+units = [];
+}
+requestAnimationFrame(gameLoop);
+}
+gameLoop();
+function initPayPal() {
+if (typeof paypal === 'undefined') return;
+['red', 'blue'].forEach(team => {
+paypal.Buttons({
+style: { layout: 'horizontal', height: 35, tagline: false },
+createOrder: (data, actions) => actions.order.create({
+purchase_units: [{ amount: { value: '1.00' }, description: 支援${team === 'red' ? '中國' : '日本'} Boss 軍團 }]
+}),
+onApprove: (data, actions) => actions.order.capture().then(() => spawnBoss(team))
+}).render(#paypal-${team});
+});
+}
