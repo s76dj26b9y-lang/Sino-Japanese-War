@@ -168,11 +168,11 @@
 
       // 主堡加厚：Boss 撞一次扣 0.5%，普通小兵撞一次扣 0.02%
       if (u.team === 'red' && u.x >= bfWidth - 72) {
-        redScore = Math.min(100, redScore + (u.isBoss ? 0.5 : 0.02));
+        redScore = Math.min(100, redScore + (u.isBoss ? 0.1 : 0.02));
         u.hp = 0;
         createBoom(bfWidth - 72, u.y);
       } else if (u.team === 'blue' && u.x <= 72) {
-        redScore = Math.max(0, redScore - (u.isBoss ? 0.5 : 0.02));
+        redScore = Math.max(0, redScore - (u.isBoss ? 0.1 : 0.02));
         u.hp = 0;
         createBoom(72, u.y);
       }
