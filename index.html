@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>中國vs日本線上大對決 - 趣味互動小遊戲</title>
+<title>中國vs日本線上大對決 - 全球即時戰況</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
   body { background: #1a1a2e; color: white; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
@@ -65,10 +65,10 @@
 
 <div class="header">
   <div class="title" id="gameTitle">⚔️ 中國 vs 日本線上大對決 ⚔️</div>
-  <div class="safe-badge">🛡️ 純屬趣味娛樂｜免下載・免註冊・不索取任何個資</div>
+  <div class="safe-badge">🌐 全網即時同步戰況｜免下載・免註冊・不索取個資</div>
   <div class="progress-container">
     <div class="red-bar" id="redBar"></div>
-    <div class="score-text" id="scoreText">中國 100,000,000 vs 100,000,000 日本</div>
+    <div class="score-text" id="scoreText">正在連線全網戰況...</div>
   </div>
 </div>
 
@@ -84,19 +84,21 @@
   <div class="controls">
     <div class="team-panel">
       <div class="team-title" style="color:#ff4d6d;">🔴 支援中國</div>
-      <button class="btn-sim btn-red" id="btnRedBoss">免費體驗 (剩 2 次)</button>
+      <button class="btn-sim btn-red" id="btnRedBoss">免費體驗 (剩 8 次)</button>
       <div id="paypal-red" class="paypal-box"></div>
     </div>
 
     <div class="team-panel">
       <div class="team-title" style="color:#3a86ff;">🔵 支援日本</div>
-      <button class="btn-sim btn-blue" id="btnBlueBoss">免費體驗 (剩 2 次)</button>
+      <button class="btn-sim btn-blue" id="btnBlueBoss">免費體驗 (剩 8 次)</button>
       <div id="paypal-blue" class="paypal-box"></div>
     </div>
   </div>
   <div class="disclaimer">🔒 本頁面僅供線上趣味互動，自願性小額贊助（$1 USD）均透過 PayPal 官方加密視窗處理</div>
 </div>
 <script>
+  const FIREBASE_URL = "https://firebaseio.com";
+
   const battlefield = document.getElementById('battlefield');
   const redBar = document.getElementById('redBar');
   const scoreText = document.getElementById('scoreText');
@@ -110,7 +112,6 @@
   const MINION_DMG = 10000;
   const BOSS_DMG = 99999;
 
-  // === 免費體驗次數設定（預設每人最多免費按 8 次） ===
   const MAX_FREE_TRIALS = 8;
   let freeTrialsLeft = parseInt(localStorage.getItem('freeTrialsLeft') ?? MAX_FREE_TRIALS);
   let adminUnlimited = false;
@@ -118,10 +119,12 @@
 
   let redHp = MAX_HP;
   let blueHp = MAX_HP;
+  let pendingRedDmg = 0;
+  let pendingBlueDmg = 0;
+  let lastBossEventId = localStorage.getItem('lastBossEventId') || "";
   let units = [];
   let frameCount = 0;
 
-  // 更新免費體驗按鈕文字與鎖定狀態
   function updateTrialButtons() {
     if (adminUnlimited) {
       btnRedBoss.innerText = '👑 版主無限召喚 (中國)';
@@ -144,7 +147,6 @@
   }
   updateTrialButtons();
 
-  // 版主秘密後門：連點頂部大標題 5 下解鎖無限免費召喚
   document.getElementById('gameTitle').addEventListener('click', () => {
     titleTapCount++;
     if (titleTapCount >= 5) {
@@ -154,6 +156,65 @@
       titleTapCount = 0;
     }
   });
+
+  async function syncWithCloud() {
+    try {
+      const res = await fetch(`${FIREBASE_URL}/warState.json`);
+      const data = await res.json();
+
+      if (!data) {
+        await fetch(`${FIREBASE_URL}/warState.json`, {
+          method: 'PUT',
+          body: JSON.stringify({ redHp: MAX_HP, blueHp: MAX_HP, bossEvent: null })
+        });
+        return;
+      }
+
+      let newRed = Math.max(0, (data.redHp ?? MAX_HP) - pendingRedDmg);
+      let newBlue = Math.max(0, (data.blueHp ?? MAX_HP) - pendingBlueDmg);
+
+      if (pendingRedDmg > 0 || pendingBlueDmg > 0) {
+        pendingRedDmg = 0;
+        pendingBlueDmg = 0;
+        if (newRed <= 0 || newBlue <= 0) {
+          newRed = MAX_HP;
+          newBlue = MAX_HP;
+        }
+        await fetch(`${FIREBASE_URL}/warState.json`, {
+          method: 'PATCH',
+          body: JSON.stringify({ redHp: newRed, blueHp: newBlue })
+        });
+      }
+
+      redHp = newRed;
+      blueHp = newBlue;
+      updateScoreDisplay();
+
+      if (data.bossEvent && data.bossEvent.id !== lastBossEventId) {
+        lastBossEventId = data.bossEvent.id;
+        localStorage.setItem('lastBossEventId', lastBossEventId);
+        if (Date.now() - data.bossEvent.time < 10000) {
+          spawnBossLocal(data.bossEvent.team);
+        }
+      }
+    } catch (e) {
+      updateScoreDisplay();
+    }
+  }
+
+  async function broadcastBoss(team) {
+    spawnBossLocal(team);
+    const eventId = Date.now() + "_" + Math.random().toString(36).substr(2, 5);
+    lastBossEventId = eventId;
+    localStorage.setItem('lastBossEventId', eventId);
+    await fetch(`${FIREBASE_URL}/warState/bossEvent.json`, {
+      method: 'PUT',
+      body: JSON.stringify({ id: eventId, team: team, time: Date.now() })
+    });
+  }
+
+  setInterval(syncWithCloud, 1500);
+  syncWithCloud();
 
   function handleFreeTrialClick(team) {
     if (!adminUnlimited) {
@@ -165,7 +226,7 @@
       localStorage.setItem('freeTrialsLeft', freeTrialsLeft);
       updateTrialButtons();
     }
-    spawnBoss(team);
+    broadcastBoss(team);
   }
 
   btnRedBoss.addEventListener('click', () => handleFreeTrialClick('red'));
@@ -205,9 +266,7 @@
     el.style.top = y + 'px';
     battlefield.appendChild(el);
 
-    if (isBoss) {
-      createShockwave(x, y, team);
-    }
+    if (isBoss) createShockwave(x, y, team);
 
     units.push({
       el, team, isBoss, x, y,
@@ -217,7 +276,7 @@
     });
   }
 
-  function spawnBoss(team) {
+  function spawnBossLocal(team) {
     triggerScreenEffect(team, true);
     for(let i = 0; i < 3; i++) {
       setTimeout(() => spawnUnit(team, true), i * 250);
@@ -289,7 +348,14 @@
     setTimeout(() => trail.remove(), 400);
   }
 
-  // 每 0.2 秒持續生產小兵
+  function updateScoreDisplay() {
+    const totalRemaining = redHp + blueHp;
+    const redRatio = totalRemaining > 0 ? (redHp / totalRemaining) * 100 : 50;
+    redBar.style.width = redRatio + '%';
+    centerLine.style.left = redRatio + '%';
+    scoreText.innerText = `中國 ${redHp.toLocaleString()} vs ${blueHp.toLocaleString()} 日本`;
+  }
+
   spawnUnit('red', false);
   spawnUnit('blue', false);
   setInterval(() => {
@@ -328,54 +394,8 @@
       }
 
       if (u.team === 'red' && u.x >= bfWidth - 75) {
-        blueHp = Math.max(0, blueHp - (u.isBoss ? BOSS_DMG : MINION_DMG));
+        const dmg = u.isBoss ? BOSS_DMG : MINION_DMG;
+        blueHp = Math.max(0, blueHp - dmg);
+        pendingBlueDmg += dmg;
         u.hp = 0;
         u.isBoss ? createBossHitEffect(bfWidth - 75, u.y, 'red', true) : createMinionHitEffect(bfWidth - 75, u.y, true);
-      } else if (u.team === 'blue' && u.x <= 75) {
-        redHp = Math.max(0, redHp - (u.isBoss ? BOSS_DMG : MINION_DMG));
-        u.hp = 0;
-        u.isBoss ? createBossHitEffect(75, u.y, 'blue', true) : createMinionHitEffect(75, u.y, true);
-      }
-
-      if (u.hp <= 0) {
-        u.el.remove();
-        units.splice(i, 1);
-      }
-    }
-
-    const totalRemaining = redHp + blueHp;
-    const redRatio = totalRemaining > 0 ? (redHp / totalRemaining) * 100 : 50;
-    redBar.style.width = redRatio + '%';
-    centerLine.style.left = redRatio + '%';
-    scoreText.innerText = `中國 ${redHp.toLocaleString()} vs ${blueHp.toLocaleString()} 日本`;
-
-    if (blueHp <= 0 || redHp <= 0) {
-      alert(blueHp <= 0 ? '🎉 中國攻破日本主堡獲勝！開始下一局！' : '🎉 日本攻破中國主堡獲勝！開始下一局！');
-      redHp = MAX_HP;
-      blueHp = MAX_HP;
-      units.forEach(u => u.el.remove());
-      units = [];
-    }
-
-    requestAnimationFrame(gameLoop);
-  }
-  gameLoop();
-</script>
-
-<script src="https://paypal.com" onload="initPayPal()"></script>
-<script>
-  function initPayPal() {
-    if (typeof paypal === 'undefined') return;
-    ['red', 'blue'].forEach(team => {
-      paypal.Buttons({
-        style: { layout: 'horizontal', height: 35, tagline: false },
-        createOrder: (data, actions) => actions.order.create({
-          purchase_units: [{ amount: { value: '1.00' }, description: `支援${team === 'red' ? '中國' : '日本'} Boss 軍團` }]
-        }),
-        onApprove: (data, actions) => actions.order.capture().then(() => spawnBoss(team))
-      }).render(`#paypal-${team}`);
-    });
-  }
-</script>
-</body>
-</html>
