@@ -399,3 +399,49 @@
         pendingBlueDmg += dmg;
         u.hp = 0;
         u.isBoss ? createBossHitEffect(bfWidth - 75, u.y, 'red', true) : createMinionHitEffect(bfWidth - 75, u.y, true);
+      } else if (u.team === 'blue' && u.x <= 75) {
+        const dmg = u.isBoss ? BOSS_DMG : MINION_DMG;
+        redHp = Math.max(0, redHp - dmg);
+        pendingRedDmg += dmg;
+        u.hp = 0;
+        u.isBoss ? createBossHitEffect(75, u.y, 'blue', true) : createMinionHitEffect(75, u.y, true);
+      }
+
+      if (u.hp <= 0) {
+        u.el.remove();
+        units.splice(i, 1);
+      }
+    }
+
+    updateScoreDisplay();
+
+    if (blueHp <= 0 || redHp <= 0) {
+      alert(blueHp <= 0 ? '🎉 中國攻破日本主堡獲勝！開始下一局！' : '🎉 日本攻破中國主堡獲勝！開始下一局！');
+      redHp = MAX_HP;
+      blueHp = MAX_HP;
+      units.forEach(u => u.el.remove());
+      units = [];
+    }
+
+    requestAnimationFrame(gameLoop);
+  }
+  gameLoop();
+</script>
+
+<script src="https://paypal.com" onload="initPayPal()"></script>
+<script>
+  function initPayPal() {
+    if (typeof paypal === 'undefined') return;
+    ['red', 'blue'].forEach(team => {
+      paypal.Buttons({
+        style: { layout: 'horizontal', height: 35, tagline: false },
+        createOrder: (data, actions) => actions.order.create({
+          purchase_units: [{ amount: { value: '1.00' }, description: `支援${team === 'red' ? '中國' : '日本'} Boss 軍團` }]
+        }),
+        onApprove: (data, actions) => actions.order.capture().then(() => broadcastBoss(team))
+      }).render(`#paypal-${team}`);
+    });
+  }
+</script>
+</body>
+</html>
