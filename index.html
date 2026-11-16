@@ -110,8 +110,8 @@
   const MINION_DMG = 10000;
   const BOSS_DMG = 99999;
 
-  // === 免費體驗次數設定（預設每人最多免費按 2 次） ===
-  const MAX_FREE_TRIALS = 2;
+  // === 免費體驗次數設定（預設每人最多免費按 8 次） ===
+  const MAX_FREE_TRIALS = 8;
   let freeTrialsLeft = parseInt(localStorage.getItem('freeTrialsLeft') ?? MAX_FREE_TRIALS);
   let adminUnlimited = false;
   let titleTapCount = 0;
