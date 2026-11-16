@@ -56,7 +56,7 @@
   .btn-red { background: linear-gradient(45deg, #ff2a55, #ff6b35); box-shadow: 0 2px 8px rgba(255,42,85,0.5); }
   .btn-blue { background: linear-gradient(45deg, #0066ff, #00c6ff); box-shadow: 0 2px 8px rgba(0,102,255,0.5); }
   .btn-disabled { background: #475569 !important; color: #94a3b8 !important; box-shadow: none !important; cursor: not-allowed; }
-  .paypal-box { min-height: 35px; }
+  .paypal-box { min-height: 36px; margin-top: 2px; }
   .disclaimer { text-align: center; font-size: 10px; color: #94a3b8; margin-top: 6px; line-height: 1.4; }
   .banner { position: absolute; top: 15%; left: 50%; transform: translateX(-50%); background: linear-gradient(90deg, #ff8c00, #ffd700, #ff8c00); color: #000; padding: 8px 18px; border-radius: 20px; font-weight: 900; font-size: 14px; display: none; z-index: 20; white-space: nowrap; box-shadow: 0 0 20px #ffd700; }
 </style>
@@ -98,7 +98,6 @@
 </div>
 <script>
   const FIREBASE_URL = "https://firebaseio.com";
-  
 
   const battlefield = document.getElementById('battlefield');
   const redBar = document.getElementById('redBar');
@@ -118,8 +117,8 @@
   let adminUnlimited = false;
   let titleTapCount = 0;
 
-  let redHp = MAX_HP;
-  let blueHp = MAX_HP;
+  let redHp = parseInt(localStorage.getItem('savedRedHp')) || MAX_HP;
+  let blueHp = parseInt(localStorage.getItem('savedBlueHp')) || MAX_HP;
   let pendingRedDmg = 0;
   let pendingBlueDmg = 0;
   let lastBossEventId = localStorage.getItem('lastBossEventId') || "";
@@ -166,7 +165,7 @@
       if (!data) {
         await fetch(`${FIREBASE_URL}/warState.json`, {
           method: 'PUT',
-          body: JSON.stringify({ redHp: MAX_HP, blueHp: MAX_HP, bossEvent: null })
+          body: JSON.stringify({ redHp: redHp, blueHp: blueHp, bossEvent: null })
         });
         return;
       }
@@ -189,6 +188,8 @@
 
       redHp = newRed;
       blueHp = newBlue;
+      localStorage.setItem('savedRedHp', redHp);
+      localStorage.setItem('savedBlueHp', blueHp);
       updateScoreDisplay();
 
       if (data.bossEvent && data.bossEvent.id !== lastBossEventId) {
@@ -205,13 +206,15 @@
 
   async function broadcastBoss(team) {
     spawnBossLocal(team);
-    const eventId = Date.now() + "_" + Math.random().toString(36).substr(2, 5);
-    lastBossEventId = eventId;
-    localStorage.setItem('lastBossEventId', eventId);
-    await fetch(`${FIREBASE_URL}/warState/bossEvent.json`, {
-      method: 'PUT',
-      body: JSON.stringify({ id: eventId, team: team, time: Date.now() })
-    });
+    try {
+      const eventId = Date.now() + "_" + Math.random().toString(36).substr(2, 5);
+      lastBossEventId = eventId;
+      localStorage.setItem('lastBossEventId', eventId);
+      await fetch(`${FIREBASE_URL}/warState/bossEvent.json`, {
+        method: 'PUT',
+        body: JSON.stringify({ id: eventId, team: team, time: Date.now() })
+      });
+    } catch (e) {}
   }
 
   setInterval(syncWithCloud, 1500);
@@ -232,7 +235,6 @@
 
   btnRedBoss.addEventListener('click', () => handleFreeTrialClick('red'));
   btnBlueBoss.addEventListener('click', () => handleFreeTrialClick('blue'));
-
   function triggerScreenEffect(team, intense = false) {
     document.body.classList.remove('shake');
     void document.body.offsetWidth;
@@ -379,7 +381,7 @@
 
       for (let j = units.length - 1; j >= 0; j--) {
         let enemy = units[j];
-        if (u.team !== enemy.team && Math.abs(u.x - enemy.x) < 30 && Math.abs(u.y - enemy.y) < 120) {
+        if (u.team !== enemy.team && Math.abs(u.x - enemy.x) < 28 && Math.abs(u.y - enemy.y) < 65) {
           enemy.hp -= u.atk;
           u.hp -= enemy.atk;
           const hitX = (u.x + enemy.x) / 2;
@@ -398,12 +400,14 @@
         const dmg = u.isBoss ? BOSS_DMG : MINION_DMG;
         blueHp = Math.max(0, blueHp - dmg);
         pendingBlueDmg += dmg;
+        localStorage.setItem('savedBlueHp', blueHp);
         u.hp = 0;
         u.isBoss ? createBossHitEffect(bfWidth - 75, u.y, 'red', true) : createMinionHitEffect(bfWidth - 75, u.y, true);
       } else if (u.team === 'blue' && u.x <= 75) {
         const dmg = u.isBoss ? BOSS_DMG : MINION_DMG;
         redHp = Math.max(0, redHp - dmg);
         pendingRedDmg += dmg;
+        localStorage.setItem('savedRedHp', redHp);
         u.hp = 0;
         u.isBoss ? createBossHitEffect(75, u.y, 'blue', true) : createMinionHitEffect(75, u.y, true);
       }
@@ -420,6 +424,8 @@
       alert(blueHp <= 0 ? '🎉 中國攻破日本主堡獲勝！開始下一局！' : '🎉 日本攻破中國主堡獲勝！開始下一局！');
       redHp = MAX_HP;
       blueHp = MAX_HP;
+      localStorage.setItem('savedRedHp', MAX_HP);
+      localStorage.setItem('savedBlueHp', MAX_HP);
       units.forEach(u => u.el.remove());
       units = [];
     }
@@ -430,7 +436,6 @@
 </script>
 
 <script src="https://paypal.com" onload="initPayPal()"></script>
-
 <script>
   function initPayPal() {
     if (typeof paypal === 'undefined') return;
@@ -438,7 +443,7 @@
       paypal.Buttons({
         style: { layout: 'horizontal', height: 35, tagline: false },
         createOrder: (data, actions) => actions.order.create({
-          purchase_units: [{ amount: { value: '1.00' }, description: `支援${team === 'red' ? '中國' : '日本'} Boss 軍團` }]
+          purchase_units: [{ amount: { value: '0.15' }, description: `支援${team === 'red' ? '中國' : '日本'} Boss 軍團` }]
         }),
         onApprove: (data, actions) => actions.order.capture().then(() => broadcastBoss(team))
       }).render(`#paypal-${team}`);
