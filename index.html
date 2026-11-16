@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>中國vs日本線上大對決</title>
+<title>中國vs日本線上大對決 - 趣味互動小遊戲</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
   body { background: #1a1a2e; color: white; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
@@ -16,8 +16,9 @@
     75% { transform: translate(-4px, 3px); }
   }
   .shake { animation: screenShake 0.45s ease-in-out; }
-  .header { padding: 12px; background: #16213e; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.5); z-index: 10; }
-  .title { font-size: 16px; font-weight: bold; margin-bottom: 8px; color: #ffd700; }
+  .header { padding: 10px 12px; background: #16213e; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.5); z-index: 10; }
+  .title { font-size: 16px; font-weight: bold; margin-bottom: 4px; color: #ffd700; user-select: none; cursor: pointer; }
+  .safe-badge { font-size: 11px; color: #4ade80; background: rgba(74, 222, 128, 0.12); border: 1px solid rgba(74, 222, 128, 0.35); border-radius: 12px; padding: 3px 10px; display: inline-block; margin-bottom: 8px; }
   .progress-container { width: 100%; height: 26px; background: #0066ff; border-radius: 13px; overflow: hidden; display: flex; border: 2px solid #fff; position: relative; }
   .red-bar { height: 100%; background: #ff2a55; width: 50%; transition: width 0.2s; }
   .score-text { position: absolute; width: 100%; text-align: center; line-height: 22px; font-size: 12px; font-weight: 900; text-shadow: 1px 1px 3px #000; }
@@ -47,20 +48,24 @@
   @keyframes floatUp { 0% { transform: translate(-50%, -50%) scale(0.8); opacity: 1; } 100% { transform: translate(-50%, -140%) scale(1.25); opacity: 0; } }
   .trail { position: absolute; width: 18px; height: 18px; border-radius: 50%; pointer-events: none; z-index: 3; animation: fadeTrail 0.4s forwards; }
   @keyframes fadeTrail { 0% { transform: translate(-50%, -50%) scale(1); opacity: 0.7; } 100% { transform: translate(-50%, -50%) scale(0.1); opacity: 0; } }
-  .controls { background: #16213e; padding: 10px; display: flex; gap: 8px; border-top: 1px solid #333; z-index: 10; }
+  .footer-area { background: #16213e; border-top: 1px solid #333; z-index: 10; padding: 8px 10px 10px; }
+  .controls { display: flex; gap: 8px; }
   .team-panel { flex: 1; display: flex; flex-direction: column; gap: 6px; background: rgba(255,255,255,0.05); padding: 8px; border-radius: 8px; }
   .team-title { text-align: center; font-size: 13px; font-weight: bold; }
-  .btn-sim { padding: 10px; border: none; border-radius: 6px; color: white; font-weight: bold; font-size: 13px; cursor: pointer; }
+  .btn-sim { padding: 9px; border: none; border-radius: 6px; color: white; font-weight: bold; font-size: 12px; cursor: pointer; transition: 0.2s; }
   .btn-red { background: linear-gradient(45deg, #ff2a55, #ff6b35); box-shadow: 0 2px 8px rgba(255,42,85,0.5); }
   .btn-blue { background: linear-gradient(45deg, #0066ff, #00c6ff); box-shadow: 0 2px 8px rgba(0,102,255,0.5); }
+  .btn-disabled { background: #475569 !important; color: #94a3b8 !important; box-shadow: none !important; cursor: not-allowed; }
   .paypal-box { min-height: 35px; }
+  .disclaimer { text-align: center; font-size: 10px; color: #94a3b8; margin-top: 6px; line-height: 1.4; }
   .banner { position: absolute; top: 15%; left: 50%; transform: translateX(-50%); background: linear-gradient(90deg, #ff8c00, #ffd700, #ff8c00); color: #000; padding: 8px 18px; border-radius: 20px; font-weight: 900; font-size: 14px; display: none; z-index: 20; white-space: nowrap; box-shadow: 0 0 20px #ffd700; }
 </style>
 </head>
 <body>
 
 <div class="header">
-  <div class="title">⚔️ 中國 vs 日本線上大對決 ⚔️</div>
+  <div class="title" id="gameTitle">⚔️ 中國 vs 日本線上大對決 ⚔️</div>
+  <div class="safe-badge">🛡️ 純屬趣味娛樂｜免下載・免註冊・不索取任何個資</div>
   <div class="progress-container">
     <div class="red-bar" id="redBar"></div>
     <div class="score-text" id="scoreText">中國 100,000,000 vs 100,000,000 日本</div>
@@ -75,18 +80,21 @@
   <img src="IMG_4655.jpeg" class="base base-blue" id="baseBlue" alt="日本主堡">
 </div>
 
-<div class="controls">
-  <div class="team-panel">
-    <div class="team-title" style="color:#ff4d6d;">🔴 支援中國</div>
-    <button class="btn-sim btn-red" id="btnRedBoss">免費測試：召喚中國 Boss</button>
-    <div id="paypal-red" class="paypal-box"></div>
-  </div>
+<div class="footer-area">
+  <div class="controls">
+    <div class="team-panel">
+      <div class="team-title" style="color:#ff4d6d;">🔴 支援中國</div>
+      <button class="btn-sim btn-red" id="btnRedBoss">免費體驗 (剩 2 次)</button>
+      <div id="paypal-red" class="paypal-box"></div>
+    </div>
 
-  <div class="team-panel">
-    <div class="team-title" style="color:#3a86ff;">🔵 支援日本</div>
-    <button class="btn-sim btn-blue" id="btnBlueBoss">免費測試：召喚日本 Boss</button>
-    <div id="paypal-blue" class="paypal-box"></div>
+    <div class="team-panel">
+      <div class="team-title" style="color:#3a86ff;">🔵 支援日本</div>
+      <button class="btn-sim btn-blue" id="btnBlueBoss">免費體驗 (剩 2 次)</button>
+      <div id="paypal-blue" class="paypal-box"></div>
+    </div>
   </div>
+  <div class="disclaimer">🔒 本頁面僅供線上趣味互動，自願性小額贊助（$1 USD）均透過 PayPal 官方加密視窗處理</div>
 </div>
 <script>
   const battlefield = document.getElementById('battlefield');
@@ -95,15 +103,73 @@
   const centerLine = document.getElementById('centerLine');
   const banner = document.getElementById('banner');
   const flashOverlay = document.getElementById('flashOverlay');
+  const btnRedBoss = document.getElementById('btnRedBoss');
+  const btnBlueBoss = document.getElementById('btnBlueBoss');
 
   const MAX_HP = 100000000;
   const MINION_DMG = 10000;
   const BOSS_DMG = 99999;
 
+  // === 免費體驗次數設定（預設每人最多免費按 2 次） ===
+  const MAX_FREE_TRIALS = 2;
+  let freeTrialsLeft = parseInt(localStorage.getItem('freeTrialsLeft') ?? MAX_FREE_TRIALS);
+  let adminUnlimited = false;
+  let titleTapCount = 0;
+
   let redHp = MAX_HP;
   let blueHp = MAX_HP;
   let units = [];
   let frameCount = 0;
+
+  // 更新免費體驗按鈕文字與鎖定狀態
+  function updateTrialButtons() {
+    if (adminUnlimited) {
+      btnRedBoss.innerText = '👑 版主無限召喚 (中國)';
+      btnBlueBoss.innerText = '👑 版主無限召喚 (日本)';
+      btnRedBoss.classList.remove('btn-disabled');
+      btnBlueBoss.classList.remove('btn-disabled');
+      return;
+    }
+    if (freeTrialsLeft > 0) {
+      btnRedBoss.innerText = `免費體驗 (剩 ${freeTrialsLeft} 次)`;
+      btnBlueBoss.innerText = `免費體驗 (剩 ${freeTrialsLeft} 次)`;
+      btnRedBoss.classList.remove('btn-disabled');
+      btnBlueBoss.classList.remove('btn-disabled');
+    } else {
+      btnRedBoss.innerText = '🔒 免費體驗已用完';
+      btnBlueBoss.innerText = '🔒 免費體驗已用完';
+      btnRedBoss.classList.add('btn-disabled');
+      btnBlueBoss.classList.add('btn-disabled');
+    }
+  }
+  updateTrialButtons();
+
+  // 版主秘密後門：連點頂部大標題 5 下解鎖無限免費召喚
+  document.getElementById('gameTitle').addEventListener('click', () => {
+    titleTapCount++;
+    if (titleTapCount >= 5) {
+      adminUnlimited = true;
+      updateTrialButtons();
+      alert('👑 已解鎖版主無限免費召喚模式！');
+      titleTapCount = 0;
+    }
+  });
+
+  function handleFreeTrialClick(team) {
+    if (!adminUnlimited) {
+      if (freeTrialsLeft <= 0) {
+        alert('您的免費體驗次數已用完！請點擊下方 PayPal 按鈕繼續召喚 Boss 支援陣營！');
+        return;
+      }
+      freeTrialsLeft--;
+      localStorage.setItem('freeTrialsLeft', freeTrialsLeft);
+      updateTrialButtons();
+    }
+    spawnBoss(team);
+  }
+
+  btnRedBoss.addEventListener('click', () => handleFreeTrialClick('red'));
+  btnBlueBoss.addEventListener('click', () => handleFreeTrialClick('blue'));
 
   function triggerScreenEffect(team, intense = false) {
     document.body.classList.remove('shake');
@@ -156,13 +222,10 @@
     for(let i = 0; i < 3; i++) {
       setTimeout(() => spawnUnit(team, true), i * 250);
     }
-    banner.innerText = team === 'red' ? '🔥 斬殺倭寇覆滅日本！超級 Boss 橫掃戰場！' : '⚡ 東亞病夫不足為懼！超級 Boss 橫掃戰場！';
+    banner.innerText = team === 'red' ? '🔥 中國大招降臨！超級 Boss 橫掃戰場！' : '⚡ 日本大招降臨！超級 Boss 橫掃戰場！';
     banner.style.display = 'block';
     setTimeout(() => { banner.style.display = 'none'; }, 3000);
   }
-
-  document.getElementById('btnRedBoss').addEventListener('click', () => spawnBoss('red'));
-  document.getElementById('btnBlueBoss').addEventListener('click', () => spawnBoss('blue'));
 
   function createMinionHitEffect(x, y, showDmg = false) {
     const boom = document.createElement('div');
@@ -226,6 +289,7 @@
     setTimeout(() => trail.remove(), 400);
   }
 
+  // 每 0.2 秒持續生產小兵
   spawnUnit('red', false);
   spawnUnit('blue', false);
   setInterval(() => {
